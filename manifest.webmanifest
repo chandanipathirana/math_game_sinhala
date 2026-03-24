@@ -1,0 +1,10 @@
+{
+  "name": "සෙල්ලම් ගණිතය",
+  "short_name": "ගණිතය",
+  "lang": "si",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fff8e6",
+  "theme_color": "#ffd166",
+  "icons": []
+}

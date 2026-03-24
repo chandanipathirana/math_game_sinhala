@@ -1,0 +1,44 @@
+{
+  "type": "object",
+  "required": [
+    "id",
+    "grade",
+    "topic",
+    "difficulty",
+    "prompt",
+    "correctAnswer",
+    "answers"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "grade": { "type": "number" },
+    "topic": { "type": "string" },
+    "difficulty": {
+      "type": "string",
+      "enum": ["easy", "medium", "hard"]
+    },
+    "prompt": { "type": "string" },
+    "audioText": { "type": "string" },
+    "correctAnswer": {
+      "type": ["number", "string"]
+    },
+    "answers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["value", "label"],
+        "properties": {
+          "value": { "type": ["number", "string"] },
+          "label": { "type": "string" }
+        }
+      }
+    },
+    "visual": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "value": { "type": "string" }
+      }
+    }
+  }
+}

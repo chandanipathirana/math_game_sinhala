@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="si">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="ශ්‍රී ලාංකික ප්‍රාථමික දරුවන් සඳහා සිංහල ගණිත අභ්‍යාස යෙදුම"
+    />
+    <meta name="theme-color" content="#ffd166" />
+    <title>සෙල්ලම් ගණිතය</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <button class="ghost-button" id="homeButton" type="button">මුල් පිටුව</button>
+        <div class="brand">
+          <p class="brand-kicker">Sinhala Math Practice</p>
+          <h1>සෙල්ලම් ගණිතය</h1>
+        </div>
+        <button class="ghost-button" id="parentButton" type="button">දෙමාපියන්</button>
+      </header>
+
+      <main class="screen-stack">
+        <section class="screen active" id="screen-welcome" data-screen="welcome">
+          <div class="hero-card">
+            <p class="eyebrow">1-3 ශ්‍රේණි සඳහා</p>
+            <h2>ගණිතය විනෝදයෙන් පුහුණු කරමු</h2>
+            <p class="hero-copy">
+              කෙටි ප්‍රශ්න, ලොකු බොත්තම්, සිංහල හඬ සහ තරුවලින් පිරුණු අභ්‍යාස සැසියක්.
+            </p>
+            <div class="hero-badges">
+              <span>අංක</span>
+              <span>එකතු කිරීම</span>
+              <span>අඩු කිරීම</span>
+              <span>කතාවෙන් ප්‍රශ්න</span>
+            </div>
+            <div class="hero-actions">
+              <button class="primary-button" id="startButton" type="button">ආරම්භ කරන්න</button>
+              <button class="secondary-button" id="continueButton" type="button">
+                අවසන් අභ්‍යාසය බලන්න
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-grade" data-screen="grade">
+          <div class="panel">
+            <p class="eyebrow">පියවර 1</p>
+            <h2>ඔබේ ශ්‍රේණිය තෝරන්න</h2>
+            <div class="choice-grid" id="gradeChoices"></div>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-topic" data-screen="topic">
+          <div class="panel">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">පියවර 2</p>
+                <h2>අභ්‍යාස විෂයය තෝරන්න</h2>
+              </div>
+              <p class="chip" id="selectedGradeLabel"></p>
+            </div>
+            <div class="choice-grid" id="topicChoices"></div>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-question" data-screen="question">
+          <div class="panel question-panel">
+            <div class="question-topbar">
+              <p class="chip" id="sessionTopicLabel"></p>
+              <p class="chip" id="questionCounter"></p>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="question-card">
+              <div class="question-actions">
+                <button class="ghost-button" id="audioButton" type="button">හඬින් අහන්න</button>
+                <p class="difficulty-pill" id="difficultyLabel"></p>
+              </div>
+              <div class="visual-card" id="questionVisual" aria-live="polite"></div>
+              <h2 id="questionPrompt"></h2>
+              <div class="answer-grid" id="answerChoices"></div>
+            </div>
+            <div class="feedback-card" id="feedbackCard" hidden>
+              <h3 id="feedbackTitle"></h3>
+              <p id="feedbackBody"></p>
+              <button class="primary-button" id="feedbackNextButton" type="button">ඊළඟ ප්‍රශ්නය</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-summary" data-screen="summary">
+          <div class="panel">
+            <p class="eyebrow">සැසිය අවසන්</p>
+            <h2 id="summaryTitle"></h2>
+            <p class="summary-score" id="summaryScore"></p>
+            <div class="star-row" id="summaryStars" aria-label="Session stars"></div>
+            <div class="summary-cards" id="summaryStats"></div>
+            <div class="hero-actions">
+              <button class="primary-button" id="replayButton" type="button">නැවත කරන්න</button>
+              <button class="secondary-button" id="changeTopicButton" type="button">
+                වෙනත් විෂයයක්
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-parent-login" data-screen="parent-login">
+          <div class="panel panel-small">
+            <p class="eyebrow">දෙමාපියන් සඳහා</p>
+            <h2>ප්‍රගතිය බලන්න</h2>
+            <p class="helper-text">
+              පළමු වතාවට නම් පෙරනිමි PIN අංකය <strong>1234</strong> යි.
+            </p>
+            <label class="field">
+              <span>PIN අංකය</span>
+              <input id="pinInput" inputmode="numeric" maxlength="4" type="password" />
+            </label>
+            <p class="inline-error" id="pinError" hidden>PIN අංකය වැරදියි.</p>
+            <button class="primary-button" id="pinSubmitButton" type="button">ඇතුල් වන්න</button>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-parent-dashboard" data-screen="parent-dashboard">
+          <div class="panel">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">දෙමාපියන්ගේ පුවරුව</p>
+                <h2>දරුවාගේ ප්‍රගතිය</h2>
+              </div>
+              <button class="ghost-button" id="resetProgressButton" type="button">ප්‍රගතිය මකන්න</button>
+            </div>
+            <div class="summary-cards" id="parentSummaryCards"></div>
+            <div class="dashboard-layout">
+              <section class="dashboard-card">
+                <h3>වඩාත් ශක්තිමත් විෂයයන්</h3>
+                <div id="strongTopics"></div>
+              </section>
+              <section class="dashboard-card">
+                <h3>අමතර පුහුණුව අවශ්‍ය</h3>
+                <div id="weakTopics"></div>
+              </section>
+            </div>
+            <section class="dashboard-card">
+              <h3>අවසන් අභ්‍යාස සැසි</h3>
+              <div id="recentSessions"></div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
