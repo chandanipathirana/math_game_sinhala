@@ -295,3 +295,57 @@ export const topicAvailabilityByGrade = {
 };
 
 export const difficultyOrder = ["easy", "medium", "hard"];
+
+export const questionSchemaFields = [
+  "id",
+  "grade",
+  "topic",
+  "difficulty",
+  "prompt",
+  "correctAnswer",
+  "answers"
+];
+
+export function normalizeQuestion(input) {
+  const question = {
+    id: String(input.id || "").trim(),
+    grade: Number(input.grade),
+    topic: String(input.topic || "").trim(),
+    difficulty: String(input.difficulty || "").trim(),
+    prompt: String(input.prompt || "").trim(),
+    audioText: String(input.audioText || input.prompt || "").trim(),
+    correctAnswer: isNaN(Number(input.correctAnswer)) ? String(input.correctAnswer || "").trim() : Number(input.correctAnswer),
+    answers: Array.isArray(input.answers)
+      ? input.answers
+          .map((answer) => ({
+            value: isNaN(Number(answer.value)) ? String(answer.value || "").trim() : Number(answer.value),
+            label: String(answer.label || answer.value || "").trim()
+          }))
+          .filter((answer) => answer.label !== "")
+      : [],
+    visual: input.visual && String(input.visual.value || "").trim() !== ""
+      ? {
+          type: String(input.visual.type || "text").trim(),
+          value: String(input.visual.value || "").trim()
+        }
+      : undefined
+  };
+  return question;
+}
+
+export function validateQuestion(input) {
+  const question = normalizeQuestion(input);
+  if (!question.id) return { valid: false, error: "Question id is required." };
+  if (![1, 2, 3].includes(question.grade)) return { valid: false, error: "Valid grade is required." };
+  if (!topicMeta[question.topic]) return { valid: false, error: "Valid topic is required." };
+  if (!difficultyOrder.includes(question.difficulty)) return { valid: false, error: "Valid difficulty is required." };
+  if (!question.prompt) return { valid: false, error: "Prompt is required." };
+  if (!question.answers.length || question.answers.length < 2) {
+    return { valid: false, error: "At least two answers are required." };
+  }
+  const answerValues = question.answers.map((answer) => answer.value);
+  if (!answerValues.some((value) => String(value) === String(question.correctAnswer))) {
+    return { valid: false, error: "Correct answer must match one of the answer options." };
+  }
+  return { valid: true, question };
+}

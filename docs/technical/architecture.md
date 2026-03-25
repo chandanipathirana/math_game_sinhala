@@ -9,7 +9,7 @@ This MVP is implemented as a dependency-light static web app using HTML, CSS, an
 - `index.html`: screen structure
 - `styles.css`: visual system and responsive layout
 - `src/content.js`: topic metadata and question bank
-- `src/app.js`: state, routing, session logic, progress storage, parent view
+- `src/app.js`: state, routing, session logic, progress storage, parent view, admin CRUD flow
 - `sw.js`: optional offline shell caching
 
 ## State Model
@@ -25,8 +25,15 @@ This MVP is implemented as a dependency-light static web app using HTML, CSS, an
 
 - Local storage for session history
 - Local storage for parent PIN
+- Local storage for admin PIN and custom questions
 
 ## Media
 
 - Question visuals are rendered from inline emoji/text assets
 - Audio uses browser speech synthesis with `si-LK` when available
+
+## Admin Content Flow
+
+- The student app starts with built-in generated questions
+- Admin-created questions are loaded from local storage
+- The effective question pool is built by combining built-in and admin-managed questions

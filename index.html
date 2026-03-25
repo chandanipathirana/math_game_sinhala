@@ -20,7 +20,10 @@
           <p class="brand-kicker">Sinhala Math Practice</p>
           <h1>සෙල්ලම් ගණිතය</h1>
         </div>
-        <button class="ghost-button" id="parentButton" type="button">දෙමාපියන්</button>
+        <div class="header-actions">
+          <button class="ghost-button" id="parentButton" type="button">දෙමාපියන්</button>
+          <button class="ghost-button" id="adminButton" type="button">පරිපාලක</button>
+        </div>
       </header>
 
       <main class="screen-stack">
@@ -148,6 +151,151 @@
             <section class="dashboard-card">
               <h3>අවසන් අභ්‍යාස සැසි</h3>
               <div id="recentSessions"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-admin-login" data-screen="admin-login">
+          <div class="panel panel-small">
+            <p class="eyebrow">පරිපාලක ප්‍රවේශය</p>
+            <h2>ප්‍රශ්න කළමනාකරණය</h2>
+            <p class="helper-text">
+              පළමු වතාවට නම් පෙරනිමි admin PIN අංකය <strong>4321</strong> යි.
+            </p>
+            <label class="field">
+              <span>Admin PIN අංකය</span>
+              <input id="adminPinInput" inputmode="numeric" maxlength="4" type="password" />
+            </label>
+            <p class="inline-error" id="adminPinError" hidden>Admin PIN අංකය වැරදියි.</p>
+            <button class="primary-button" id="adminPinSubmitButton" type="button">ඇතුල් වන්න</button>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-admin-dashboard" data-screen="admin-dashboard">
+          <div class="panel">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">පරිපාලක පුවරුව</p>
+                <h2>ප්‍රශ්න එකතු කරන්න සහ සංස්කරණය කරන්න</h2>
+              </div>
+              <div class="header-actions">
+                <button class="ghost-button" id="adminNewQuestionButton" type="button">නව ප්‍රශ්නයක්</button>
+                <button class="ghost-button" id="adminExportButton" type="button">Export JSON</button>
+              </div>
+            </div>
+
+            <div class="summary-cards" id="adminSummaryCards"></div>
+
+            <div class="admin-layout">
+              <section class="dashboard-card">
+                <h3>පවතින ප්‍රශ්න</h3>
+                <div class="admin-filters">
+                  <label class="field compact-field">
+                    <span>ශ්‍රේණිය</span>
+                    <select id="adminFilterGrade"></select>
+                  </label>
+                  <label class="field compact-field">
+                    <span>විෂයය</span>
+                    <select id="adminFilterTopic"></select>
+                  </label>
+                  <label class="field compact-field">
+                    <span>සෙවීම</span>
+                    <input id="adminSearchInput" type="text" placeholder="ප්‍රශ්න පෙළ සොයන්න" />
+                  </label>
+                </div>
+                <div id="adminQuestionList"></div>
+              </section>
+
+              <section class="dashboard-card">
+                <h3 id="adminFormTitle">නව ප්‍රශ්නයක්</h3>
+                <form id="adminQuestionForm" class="admin-form">
+                  <label class="field">
+                    <span>ප්‍රශ්න ID</span>
+                    <input id="questionIdInput" type="text" placeholder="admin-question-001" />
+                  </label>
+                  <div class="admin-grid">
+                    <label class="field compact-field">
+                      <span>ශ්‍රේණිය</span>
+                      <select id="questionGradeInput"></select>
+                    </label>
+                    <label class="field compact-field">
+                      <span>විෂයය</span>
+                      <select id="questionTopicInput"></select>
+                    </label>
+                    <label class="field compact-field">
+                      <span>අවධිය</span>
+                      <select id="questionDifficultyInput">
+                        <option value="easy">easy</option>
+                        <option value="medium">medium</option>
+                        <option value="hard">hard</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label class="field">
+                    <span>ප්‍රශ්නය</span>
+                    <textarea id="questionPromptInput" rows="3" placeholder="සිංහල ප්‍රශ්නය මෙහි ලියන්න"></textarea>
+                  </label>
+                  <label class="field">
+                    <span>හඬ පෙළ</span>
+                    <textarea id="questionAudioInput" rows="2" placeholder="audio සඳහා වෙනම පෙළ අවශ්‍ය නම්"></textarea>
+                  </label>
+                  <div class="admin-grid">
+                    <label class="field compact-field">
+                      <span>Visual වර්ගය</span>
+                      <select id="questionVisualTypeInput">
+                        <option value="text">text</option>
+                        <option value="emoji">emoji</option>
+                      </select>
+                    </label>
+                    <label class="field">
+                      <span>Visual අගය</span>
+                      <input id="questionVisualValueInput" type="text" placeholder="🍎 🍎 🍎 හෝ 12" />
+                    </label>
+                  </div>
+                  <div class="admin-grid">
+                    <label class="field compact-field">
+                      <span>විකල්ප 1</span>
+                      <input class="answer-option-input" data-index="0" type="text" />
+                    </label>
+                    <label class="field compact-field">
+                      <span>විකල්ප 2</span>
+                      <input class="answer-option-input" data-index="1" type="text" />
+                    </label>
+                    <label class="field compact-field">
+                      <span>විකල්ප 3</span>
+                      <input class="answer-option-input" data-index="2" type="text" />
+                    </label>
+                    <label class="field compact-field">
+                      <span>විකල්ප 4</span>
+                      <input class="answer-option-input" data-index="3" type="text" />
+                    </label>
+                  </div>
+                  <label class="field compact-field">
+                    <span>නිවැරදි පිළිතුර</span>
+                    <input id="questionCorrectAnswerInput" type="text" />
+                  </label>
+                  <p class="inline-error" id="adminFormError" hidden>කරුණාකර අවශ්‍ය තොරතුරු සියල්ල පුරවන්න.</p>
+                  <p class="helper-text" id="adminFormHint">මෙහි සුරකින ප්‍රශ්න browser local storage තුළ තැන්පත් වේ.</p>
+                  <div class="hero-actions">
+                    <button class="primary-button" id="adminSaveQuestionButton" type="submit">සුරකින්න</button>
+                    <button class="secondary-button" id="adminResetFormButton" type="button">Form එක හිස් කරන්න</button>
+                  </div>
+                </form>
+              </section>
+            </div>
+
+            <section class="dashboard-card">
+              <div class="section-head">
+                <h3>JSON Import / Export</h3>
+                <button class="ghost-button" id="adminImportButton" type="button">Import JSON</button>
+              </div>
+              <label class="field">
+                <span>JSON දත්ත</span>
+                <textarea id="adminJsonTextarea" rows="10" placeholder='[{"id":"admin-question-001","grade":1,...}]'></textarea>
+              </label>
+              <p class="helper-text">
+                Export කළ දත්ත මෙහි paste කර Import JSON ඔබන්න. මෙය custom admin questions පමණක් import කරයි.
+              </p>
             </section>
           </div>
         </section>

@@ -1,26 +1,31 @@
 import {
   contentSummary,
-  difficultyOrder,
   feedbackPhrases,
   gradeLabels,
+  normalizeQuestion,
   questions,
   topicAvailabilityByGrade,
-  topicMeta
+  topicMeta,
+  validateQuestion
 } from "./content.js";
 
 const storageKeys = {
   progress: "sinhala-math-progress",
-  pin: "sinhala-math-parent-pin"
+  pin: "sinhala-math-parent-pin",
+  adminPin: "sinhala-math-admin-pin",
+  adminQuestions: "sinhala-math-admin-questions"
 };
 
 const state = {
   screen: "welcome",
   grade: null,
   topic: null,
+  allQuestions: [],
   sessionQuestions: [],
   currentQuestionIndex: 0,
   answers: [],
-  feedback: null
+  feedback: null,
+  editingQuestionId: null
 };
 
 const el = {
@@ -29,6 +34,7 @@ const el = {
   continueButton: document.getElementById("continueButton"),
   homeButton: document.getElementById("homeButton"),
   parentButton: document.getElementById("parentButton"),
+  adminButton: document.getElementById("adminButton"),
   gradeChoices: document.getElementById("gradeChoices"),
   topicChoices: document.getElementById("topicChoices"),
   selectedGradeLabel: document.getElementById("selectedGradeLabel"),
@@ -57,7 +63,34 @@ const el = {
   strongTopics: document.getElementById("strongTopics"),
   weakTopics: document.getElementById("weakTopics"),
   recentSessions: document.getElementById("recentSessions"),
-  resetProgressButton: document.getElementById("resetProgressButton")
+  resetProgressButton: document.getElementById("resetProgressButton"),
+  adminPinInput: document.getElementById("adminPinInput"),
+  adminPinError: document.getElementById("adminPinError"),
+  adminPinSubmitButton: document.getElementById("adminPinSubmitButton"),
+  adminSummaryCards: document.getElementById("adminSummaryCards"),
+  adminFilterGrade: document.getElementById("adminFilterGrade"),
+  adminFilterTopic: document.getElementById("adminFilterTopic"),
+  adminSearchInput: document.getElementById("adminSearchInput"),
+  adminQuestionList: document.getElementById("adminQuestionList"),
+  adminFormTitle: document.getElementById("adminFormTitle"),
+  adminQuestionForm: document.getElementById("adminQuestionForm"),
+  questionIdInput: document.getElementById("questionIdInput"),
+  questionGradeInput: document.getElementById("questionGradeInput"),
+  questionTopicInput: document.getElementById("questionTopicInput"),
+  questionDifficultyInput: document.getElementById("questionDifficultyInput"),
+  questionPromptInput: document.getElementById("questionPromptInput"),
+  questionAudioInput: document.getElementById("questionAudioInput"),
+  questionVisualTypeInput: document.getElementById("questionVisualTypeInput"),
+  questionVisualValueInput: document.getElementById("questionVisualValueInput"),
+  answerOptionInputs: [...document.querySelectorAll(".answer-option-input")],
+  questionCorrectAnswerInput: document.getElementById("questionCorrectAnswerInput"),
+  adminFormError: document.getElementById("adminFormError"),
+  adminFormHint: document.getElementById("adminFormHint"),
+  adminNewQuestionButton: document.getElementById("adminNewQuestionButton"),
+  adminResetFormButton: document.getElementById("adminResetFormButton"),
+  adminExportButton: document.getElementById("adminExportButton"),
+  adminImportButton: document.getElementById("adminImportButton"),
+  adminJsonTextarea: document.getElementById("adminJsonTextarea")
 };
 
 function setScreen(screen) {
@@ -79,13 +112,40 @@ function saveProgress(progress) {
   localStorage.setItem(storageKeys.progress, JSON.stringify(progress));
 }
 
+function readAdminQuestions() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(storageKeys.adminQuestions) || "[]");
+    return Array.isArray(raw)
+      ? raw
+          .map((item) => {
+            const result = validateQuestion(item);
+            return result.valid ? result.question : null;
+          })
+          .filter(Boolean)
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveAdminQuestions(questionList) {
+  localStorage.setItem(storageKeys.adminQuestions, JSON.stringify(questionList));
+}
+
 function getParentPin() {
   return localStorage.getItem(storageKeys.pin) || "1234";
+}
+
+function getAdminPin() {
+  return localStorage.getItem(storageKeys.adminPin) || "4321";
 }
 
 function setDefaultPin() {
   if (!localStorage.getItem(storageKeys.pin)) {
     localStorage.setItem(storageKeys.pin, "1234");
+  }
+  if (!localStorage.getItem(storageKeys.adminPin)) {
+    localStorage.setItem(storageKeys.adminPin, "4321");
   }
 }
 
@@ -112,9 +172,14 @@ function getDifficultyPlan(progress, grade, topic) {
   return ["easy", "easy", "easy", "medium", "medium"];
 }
 
+function refreshAllQuestions() {
+  state.allQuestions = [...questions, ...readAdminQuestions()];
+}
+
 function buildSessionQuestions() {
   const progress = readProgress();
-  const pool = questions.filter((question) => question.grade === state.grade && question.topic === state.topic);
+  refreshAllQuestions();
+  const pool = state.allQuestions.filter((question) => question.grade === state.grade && question.topic === state.topic);
   const difficultyPlan = getDifficultyPlan(progress, state.grade, state.topic);
   const selected = [];
 
@@ -176,6 +241,24 @@ function renderTopicChoices() {
   });
 }
 
+function populateAdminSelects() {
+  const gradeOptions = ['<option value="all">සියල්ල</option>']
+    .concat(Object.entries(gradeLabels).map(([value, label]) => `<option value="${value}">${label}</option>`))
+    .join("");
+  el.adminFilterGrade.innerHTML = gradeOptions;
+  el.questionGradeInput.innerHTML = Object.entries(gradeLabels)
+    .map(([value, label]) => `<option value="${value}">${label}</option>`)
+    .join("");
+
+  const topicOptions = ['<option value="all">සියලු විෂයයන්</option>']
+    .concat(Object.entries(topicMeta).map(([value, meta]) => `<option value="${value}">${meta.label}</option>`))
+    .join("");
+  el.adminFilterTopic.innerHTML = topicOptions;
+  el.questionTopicInput.innerHTML = Object.entries(topicMeta)
+    .map(([value, meta]) => `<option value="${value}">${meta.label}</option>`)
+    .join("");
+}
+
 function renderVisual(question) {
   if (!question.visual) {
     el.questionVisual.textContent = "🧮";
@@ -207,6 +290,7 @@ function renderQuestion() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "answer-button";
+    button.dataset.value = String(answer.value);
     button.innerHTML = `<strong>${answer.label}</strong><small>තෝරන්න</small>`;
     button.addEventListener("click", () => submitAnswer(answer.value));
     el.answerChoices.appendChild(button);
@@ -225,9 +309,11 @@ function submitAnswer(selectedValue) {
   state.feedback = { isCorrect, correctAnswer: question.correctAnswer };
 
   [...el.answerChoices.children].forEach((button) => {
-    const answerValue = Number(button.querySelector("strong").textContent);
-    if (answerValue === question.correctAnswer) button.classList.add("correct");
-    if (answerValue === selectedValue && selectedValue !== question.correctAnswer) button.classList.add("incorrect");
+    const answerValue = button.dataset.value;
+    if (String(answerValue) === String(question.correctAnswer)) button.classList.add("correct");
+    if (String(answerValue) === String(selectedValue) && String(selectedValue) !== String(question.correctAnswer)) {
+      button.classList.add("incorrect");
+    }
     button.disabled = true;
   });
 
@@ -349,6 +435,172 @@ function renderParentDashboard() {
   });
 }
 
+function getFilteredAdminQuestions() {
+  refreshAllQuestions();
+  const customIds = new Set(readAdminQuestions().map((question) => question.id));
+  const gradeFilter = el.adminFilterGrade.value || "all";
+  const topicFilter = el.adminFilterTopic.value || "all";
+  const search = (el.adminSearchInput.value || "").trim().toLowerCase();
+
+  return state.allQuestions.filter((question) => {
+    if (gradeFilter !== "all" && String(question.grade) !== gradeFilter) return false;
+    if (topicFilter !== "all" && question.topic !== topicFilter) return false;
+    if (search && !question.prompt.toLowerCase().includes(search)) return false;
+    return true;
+  }).map((question) => ({
+    ...question,
+    custom: customIds.has(question.id)
+  }));
+}
+
+function renderAdminDashboard() {
+  refreshAllQuestions();
+  const customQuestions = readAdminQuestions();
+  const builtInCount = questions.length;
+  const totalCount = state.allQuestions.length;
+  el.adminSummaryCards.innerHTML = "";
+  [
+    ["Built-in", String(builtInCount)],
+    ["Custom", String(customQuestions.length)],
+    ["Total", String(totalCount)]
+  ].forEach(([label, value]) => {
+    const card = document.createElement("div");
+    card.className = "stat-card";
+    card.innerHTML = `<span>${label}</span><strong>${value}</strong>`;
+    el.adminSummaryCards.appendChild(card);
+  });
+
+  const filtered = getFilteredAdminQuestions();
+  el.adminQuestionList.innerHTML = "";
+  if (!filtered.length) {
+    el.adminQuestionList.innerHTML = '<div class="empty-state">මෙම filter සඳහා ප්‍රශ්න නැහැ.</div>';
+    return;
+  }
+
+  filtered.slice(0, 80).forEach((question) => {
+    const item = document.createElement("div");
+    item.className = "list-card";
+    item.innerHTML = `
+      <strong>${gradeLabels[question.grade]} • ${topicMeta[question.topic].label} • ${question.difficulty}</strong>
+      <div>${question.prompt}</div>
+      <small>${question.custom ? "custom question" : "built-in question"}</small>
+      <div class="card-actions">
+        <button class="mini-button" type="button" data-action="edit" data-id="${question.id}">Edit</button>
+        ${question.custom ? `<button class="mini-button" type="button" data-action="delete" data-id="${question.id}">Delete</button>` : ""}
+      </div>
+    `;
+    el.adminQuestionList.appendChild(item);
+  });
+}
+
+function resetAdminForm() {
+  state.editingQuestionId = null;
+  el.adminFormTitle.textContent = "නව ප්‍රශ්නයක්";
+  el.questionIdInput.value = "";
+  el.questionGradeInput.value = "1";
+  el.questionTopicInput.value = "number";
+  el.questionDifficultyInput.value = "easy";
+  el.questionPromptInput.value = "";
+  el.questionAudioInput.value = "";
+  el.questionVisualTypeInput.value = "text";
+  el.questionVisualValueInput.value = "";
+  el.answerOptionInputs.forEach((input) => {
+    input.value = "";
+  });
+  el.questionCorrectAnswerInput.value = "";
+  el.adminFormError.hidden = true;
+  el.adminFormHint.textContent = "මෙහි සුරකින ප්‍රශ්න browser local storage තුළ තැන්පත් වේ.";
+}
+
+function populateAdminForm(question) {
+  state.editingQuestionId = question.id;
+  el.adminFormTitle.textContent = "ප්‍රශ්නය සංස්කරණය කරන්න";
+  el.questionIdInput.value = question.id;
+  el.questionGradeInput.value = String(question.grade);
+  el.questionTopicInput.value = question.topic;
+  el.questionDifficultyInput.value = question.difficulty;
+  el.questionPromptInput.value = question.prompt;
+  el.questionAudioInput.value = question.audioText || "";
+  el.questionVisualTypeInput.value = question.visual?.type || "text";
+  el.questionVisualValueInput.value = question.visual?.value || "";
+  el.answerOptionInputs.forEach((input, index) => {
+    input.value = question.answers[index]?.label || "";
+  });
+  el.questionCorrectAnswerInput.value = String(question.correctAnswer);
+  el.adminFormError.hidden = true;
+  el.adminFormHint.textContent = "මෙය custom question එකක් ලෙස update වේ.";
+}
+
+function buildQuestionFromForm() {
+  const answers = el.answerOptionInputs
+    .map((input) => input.value.trim())
+    .filter(Boolean)
+    .map((value) => ({
+      value: isNaN(Number(value)) ? value : Number(value),
+      label: value
+    }));
+
+  const raw = {
+    id: el.questionIdInput.value.trim(),
+    grade: Number(el.questionGradeInput.value),
+    topic: el.questionTopicInput.value,
+    difficulty: el.questionDifficultyInput.value,
+    prompt: el.questionPromptInput.value.trim(),
+    audioText: el.questionAudioInput.value.trim(),
+    visual:
+      el.questionVisualValueInput.value.trim() !== ""
+        ? {
+            type: el.questionVisualTypeInput.value,
+            value: el.questionVisualValueInput.value.trim()
+          }
+        : undefined,
+    answers,
+    correctAnswer: el.questionCorrectAnswerInput.value.trim()
+  };
+  return validateQuestion(raw);
+}
+
+function upsertAdminQuestion(question) {
+  const current = readAdminQuestions();
+  const next = current.filter((item) => item.id !== question.id);
+  next.unshift(normalizeQuestion(question));
+  saveAdminQuestions(next);
+  refreshAllQuestions();
+}
+
+function deleteAdminQuestion(id) {
+  const next = readAdminQuestions().filter((question) => question.id !== id);
+  saveAdminQuestions(next);
+  refreshAllQuestions();
+}
+
+function exportAdminQuestions() {
+  const customQuestions = readAdminQuestions();
+  el.adminJsonTextarea.value = JSON.stringify(customQuestions, null, 2);
+}
+
+function importAdminQuestions() {
+  try {
+    const parsed = JSON.parse(el.adminJsonTextarea.value || "[]");
+    if (!Array.isArray(parsed)) throw new Error("JSON must be an array.");
+    const normalized = [];
+    for (const item of parsed) {
+      const result = validateQuestion(item);
+      if (!result.valid) throw new Error(result.error);
+      normalized.push(result.question);
+    }
+    saveAdminQuestions(normalized);
+    refreshAllQuestions();
+    renderAdminDashboard();
+    resetAdminForm();
+    el.adminFormError.hidden = true;
+    el.adminFormHint.textContent = "JSON import සාර්ථකයි.";
+  } catch (error) {
+    el.adminFormError.hidden = false;
+    el.adminFormError.textContent = `Import අසාර්ථකයි: ${error.message}`;
+  }
+}
+
 function renderTopicList(container, items, message) {
   if (!items.length) {
     container.innerHTML = '<div class="empty-state">තවම දත්ත නැහැ.</div>';
@@ -392,6 +644,11 @@ function attachEvents() {
     el.pinError.hidden = true;
     setScreen("parent-login");
   });
+  el.adminButton.addEventListener("click", () => {
+    el.adminPinInput.value = "";
+    el.adminPinError.hidden = true;
+    setScreen("admin-login");
+  });
   el.audioButton.addEventListener("click", speakCurrentQuestion);
   el.feedbackNextButton.addEventListener("click", nextQuestion);
   el.replayButton.addEventListener("click", () => {
@@ -408,9 +665,63 @@ function attachEvents() {
     }
     el.pinError.hidden = false;
   });
+  el.adminPinSubmitButton.addEventListener("click", () => {
+    if (el.adminPinInput.value === getAdminPin()) {
+      renderAdminDashboard();
+      setScreen("admin-dashboard");
+      return;
+    }
+    el.adminPinError.hidden = false;
+  });
   el.resetProgressButton.addEventListener("click", () => {
     localStorage.removeItem(storageKeys.progress);
     renderParentDashboard();
+  });
+  el.adminFilterGrade.addEventListener("change", renderAdminDashboard);
+  el.adminFilterTopic.addEventListener("change", renderAdminDashboard);
+  el.adminSearchInput.addEventListener("input", renderAdminDashboard);
+  el.adminNewQuestionButton.addEventListener("click", resetAdminForm);
+  el.adminResetFormButton.addEventListener("click", resetAdminForm);
+  el.adminExportButton.addEventListener("click", exportAdminQuestions);
+  el.adminImportButton.addEventListener("click", importAdminQuestions);
+  el.adminQuestionForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const result = buildQuestionFromForm();
+    if (!result.valid) {
+      el.adminFormError.hidden = false;
+      el.adminFormError.textContent = result.error;
+      return;
+    }
+    upsertAdminQuestion(result.question);
+    renderAdminDashboard();
+    resetAdminForm();
+    el.adminFormHint.textContent = "ප්‍රශ්නය සාර්ථකව සුරකින්න ලැබුණා.";
+  });
+  el.adminQuestionList.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const action = target.dataset.action;
+    const id = target.dataset.id;
+    if (!action || !id) return;
+    if (action === "edit") {
+      const adminQuestion = readAdminQuestions().find((question) => question.id === id);
+      const fallbackQuestion = state.allQuestions.find((question) => question.id === id);
+      const source = adminQuestion || fallbackQuestion;
+      if (source) {
+        const editable = adminQuestion
+          ? source
+          : {
+              ...source,
+              id: `${source.id}-custom`
+            };
+        populateAdminForm(editable);
+      }
+    }
+    if (action === "delete") {
+      deleteAdminQuestion(id);
+      renderAdminDashboard();
+      if (state.editingQuestionId === id) resetAdminForm();
+    }
   });
 }
 
@@ -424,11 +735,14 @@ function registerServiceWorker() {
 
 function boot() {
   setDefaultPin();
+  refreshAllQuestions();
   renderGradeChoices();
+  populateAdminSelects();
+  resetAdminForm();
   attachEvents();
   registerServiceWorker();
   setScreen("welcome");
-  console.info(`Loaded ${contentSummary.totalQuestions} Sinhala math questions.`);
+  console.info(`Loaded ${contentSummary.totalQuestions} built-in Sinhala math questions.`);
 }
 
 boot();
