@@ -47,6 +47,16 @@ Storage key:
 
 - `sinhala-math-admin-questions`
 
+## Current Supabase-Ready Shape
+
+The prepared Supabase schema uses:
+
+- `questions.id` as `text`
+- `questions.options` as `jsonb`
+- `created_by` linked to `auth.users`
+
+Text ids are used intentionally so the current app question ids can move into the database without UUID remapping.
+
 ## Why Separate Built-In and Admin Questions
 
 - Built-in generated questions give the app a reliable starting content set

@@ -159,14 +159,18 @@
           <div class="panel panel-small">
             <p class="eyebrow">පරිපාලක ප්‍රවේශය</p>
             <h2>ප්‍රශ්න කළමනාකරණය</h2>
-            <p class="helper-text">
-              පළමු වතාවට නම් පෙරනිමි admin PIN අංකය <strong>4321</strong> යි.
+            <p class="helper-text" id="adminLoginHelper">
+              Supabase සකසා ඇත්නම් email සහ password භාවිතා කරන්න. නැත්නම් local fallback mode භාවිතා වේ.
             </p>
             <label class="field">
-              <span>Admin PIN අංකය</span>
-              <input id="adminPinInput" inputmode="numeric" maxlength="4" type="password" />
+              <span>Admin Email</span>
+              <input id="adminEmailInput" type="email" autocomplete="username" />
             </label>
-            <p class="inline-error" id="adminPinError" hidden>Admin PIN අංකය වැරදියි.</p>
+            <label class="field">
+              <span>Password / PIN</span>
+              <input id="adminPasswordInput" autocomplete="current-password" type="password" />
+            </label>
+            <p class="inline-error" id="adminPinError" hidden>Admin login අසාර්ථකයි.</p>
             <button class="primary-button" id="adminPinSubmitButton" type="button">ඇතුල් වන්න</button>
           </div>
         </section>
@@ -177,10 +181,12 @@
               <div>
                 <p class="eyebrow">පරිපාලක පුවරුව</p>
                 <h2>ප්‍රශ්න එකතු කරන්න සහ සංස්කරණය කරන්න</h2>
+                <p class="helper-text" id="adminDataSourceLabel">Question source: local fallback</p>
               </div>
               <div class="header-actions">
                 <button class="ghost-button" id="adminNewQuestionButton" type="button">නව ප්‍රශ්නයක්</button>
                 <button class="ghost-button" id="adminExportButton" type="button">Export JSON</button>
+                <button class="ghost-button" id="adminLogoutButton" type="button">Logout</button>
               </div>
             </div>
 
@@ -302,6 +308,8 @@
       </main>
     </div>
 
+    <script src="./public-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="./src/app.js"></script>
   </body>
 </html>
